@@ -152,7 +152,7 @@
     </div>
 
     <div class="card">
-      <div id="calendar"></div>
+      <div id="calendar" style="width:100%;min-height:65vh"></div>
     </div>
 
   </div>
@@ -164,13 +164,24 @@
   document.addEventListener('DOMContentLoaded', function () {
     const el = document.getElementById('calendar');
 
+    if (!el) { console.error('ไม่เจอ div calendar'); return; }
+
     calendar = new FullCalendar.Calendar(el, {
       initialView: 'dayGridMonth',
       height: 480,
       events: function (info, successCallback) {
         fetch(API_URL + '?action=getEvents')
           .then(r => r.json())
-          .then(successCallback);
+          .then(data => {
+            const events = data.map(e => ({
+              id: e.id,
+              title: e.title,
+              start: e.start,
+              end: e.end
+            }));
+            successCallback(events);
+          })
+          .catch(err => console.error(err));
       },
       eventClick: function(info) {
         const ev = info.event;
