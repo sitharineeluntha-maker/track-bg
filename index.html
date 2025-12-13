@@ -2,14 +2,96 @@
 <html lang="th">
 <head>
   <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Track BG</title>
-  <link href="https://fonts.googleapis.com/css2?family=Prompt&display=swap" rel="stylesheet">
+
+  <!-- Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;600&display=swap" rel="stylesheet">
+
+  <!-- FullCalendar -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.css">
   <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
 
   <style>
-    body { font-family: Prompt; background:#0b0f1f; color:white; padding:16px }
-    #calendar { max-width:480px; margin:auto }
+    body {
+      font-family: 'Prompt', sans-serif;
+      background: linear-gradient(180deg, #0b0f1f, #14182f);
+      color: #fff;
+      margin: 0;
+      padding: 16px;
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 12px;
+      font-weight: 600;
+    }
+
+    #calendar {
+      max-width: 480px;
+      margin: auto;
+      background: #0e1330;
+      border-radius: 16px;
+      padding: 12px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.3);
+    }
+
+    .fc .fc-daygrid-day.fc-day-today {
+      background: rgba(180, 120, 255, 0.25) !important;
+      box-shadow: inset 0 0 0 2px #b97cff;
+    }
+
+    .fc-event {
+      border-radius: 10px !important;
+      padding: 2px 6px;
+      font-size: 0.85em;
+      border: none;
+    }
+
+    /* Modal */
+    #modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.6);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 999;
+    }
+
+    .modal-card {
+      background: #151a3b;
+      border-radius: 18px;
+      padding: 20px;
+      width: 90%;
+      max-width: 320px;
+      text-align: center;
+      box-shadow: 0 20px 40px rgba(0,0,0,.4);
+    }
+
+    .modal-card h3 {
+      margin: 0 0 10px;
+    }
+
+    .modal-card button {
+      margin-top: 12px;
+      width: 100%;
+      padding: 10px;
+      border-radius: 12px;
+      border: none;
+      font-family: 'Prompt';
+      font-size: 14px;
+    }
+
+    .btn-delete {
+      background: #ff5c5c;
+      color: white;
+    }
+
+    .btn-close {
+      background: #2c326a;
+      color: white;
+    }
   </style>
 </head>
 <body>
@@ -17,44 +99,76 @@
 <h2>🪐 Track BG</h2>
 <div id="calendar"></div>
 
+<!-- Modal -->
+<div id="modal">
+  <div class="modal-card">
+    <h3 id="m-title"></h3>
+    <p id="m-time"></p>
+    <button class="btn-delete" onclick="confirmDelete()">🧹 ลบคิว BG</button>
+    <button class="btn-close" onclick="closeModal()">ปิด</button>
+  </div>
+</div>
+
 <script>
-const API_URL = "https://script.google.com/macros/s/AKfycbz9pguhBuCPhXd4zb10ZL2n3xm7zValNdNxlLJRqUMZb3QMhXC6F2sIGgImwOadlH7iSA/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbzTn2UJzcWMz079IuGDM_unHNrRNlBhYtaY-YQZl6d9hCSQ0jJyUOgfam-Phi1e1XEBsw/exec";
+let selectedEventId = null;
+
+const bgColors = {
+  'แมทธิว': '#b97cff',
+  'บอส': '#6ecbff'
+};
 
 document.addEventListener('DOMContentLoaded', () => {
-  const cal = new FullCalendar.Calendar(
+  const calendar = new FullCalendar.Calendar(
     document.getElementById('calendar'),
     {
       initialView: 'dayGridMonth',
+      height: 'auto',
       events: fetchEvents,
       eventClick(info) {
-        if (confirm('ลบคิวนี้?\\n' + info.event.title)) {
-          deleteEvent(info.event.id);
-        }
+        selectedEventId = info.event.id;
+        document.getElementById('m-title').innerText = info.event.title;
+        document.getElementById('m-time').innerText = info.event.start.toLocaleString();
+        document.getElementById('modal').style.display = 'flex';
       }
     }
   );
-  cal.render();
+
+  calendar.render();
 
   function fetchEvents(info, success) {
     fetch(API_URL + '?action=getEvents')
       .then(r => r.json())
       .then(data => {
-        success(data.map(e => ({
-          id: e.id,
-          title: e.title,
-          start: e.start,
-          end: e.end
-        })));
+        success(data.map(e => {
+          let color = '#888';
+          Object.keys(bgColors).forEach(name => {
+            if (e.title.includes(name)) color = bgColors[name];
+          });
+          return {
+            id: e.id,
+            title: e.title,
+            start: e.start,
+            end: e.end,
+            backgroundColor: color
+          };
+        }));
       });
   }
-
-  function deleteEvent(id) {
-    fetch(API_URL, {
-      method: 'POST',
-      body: JSON.stringify({ action:'delete', id })
-    }).then(() => location.reload());
-  }
 });
+
+function closeModal() {
+  document.getElementById('modal').style.display = 'none';
+}
+
+function confirmDelete() {
+  if (!confirm('แน่ใจว่าต้องการลบคิวนี้?')) return;
+
+  fetch(API_URL, {
+    method: 'POST',
+    body: JSON.stringify({ action: 'delete', id: selectedEventId })
+  }).then(() => location.reload());
+}
 </script>
 
 </body>
