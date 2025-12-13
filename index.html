@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Track BG – Message Log</title>
+  <title>Track BG – Daily Log</title>
 
   <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
 
@@ -16,19 +16,40 @@
       color: #fff;
     }
 
+    .container {
+      max-width: 480px;
+      margin: auto;
+    }
+
     h2 {
       text-align: center;
-      margin-bottom: 10px;
+      margin: 8px 0 4px;
       font-weight: 600;
     }
 
+    .now {
+      text-align: center;
+      font-size: 13px;
+      opacity: .85;
+      margin-bottom: 14px;
+    }
+
+    .summary {
+      background: #151a3b;
+      border-radius: 14px;
+      padding: 12px;
+      margin-bottom: 14px;
+      font-size: 13px;
+      display: flex;
+      justify-content: space-between;
+    }
+
     .card {
-      max-width: 480px;
-      margin: auto;
       background: #0e1330;
       border-radius: 18px;
       padding: 16px;
       box-shadow: 0 10px 30px rgba(0,0,0,.35);
+      margin-bottom: 16px;
     }
 
     textarea, input {
@@ -43,10 +64,7 @@
       margin-bottom: 10px;
     }
 
-    textarea {
-      min-height: 80px;
-      resize: vertical;
-    }
+    textarea { min-height: 80px; }
 
     button {
       width: 100%;
@@ -60,8 +78,17 @@
       cursor: pointer;
     }
 
+    .section {
+      margin-bottom: 18px;
+    }
+
+    .section h3 {
+      font-size: 14px;
+      margin: 6px 0 8px;
+      opacity: .9;
+    }
+
     .messages {
-      margin-top: 16px;
       display: flex;
       flex-direction: column;
       gap: 10px;
@@ -74,7 +101,10 @@
       line-height: 1.4;
       box-shadow: 0 4px 10px rgba(0,0,0,.3);
       position: relative;
-      animation: pop .2s ease-out;
+    }
+
+    .bubble.today {
+      box-shadow: 0 0 0 2px #b97cff, 0 6px 14px rgba(0,0,0,.4);
     }
 
     .bubble small {
@@ -96,58 +126,57 @@
       opacity: .6;
     }
 
-    .bubble button:hover {
-      opacity: 1;
-    }
-
     .bg-matthew { background: linear-gradient(135deg, #b97cff, #8b5cf6); }
     .bg-boss { background: linear-gradient(135deg, #6ecbff, #3b82f6); }
     .bg-default { background: #1a1f46; }
-
-    @keyframes pop {
-      from { transform: scale(.95); opacity: 0; }
-      to { transform: scale(1); opacity: 1; }
-    }
   </style>
 </head>
 <body>
 
-<h2>💬 Track BG – Log</h2>
+<div class="container">
+  <h2>🪐 Track BG</h2>
+  <div class="now" id="now"></div>
 
-<div class="card">
-  <input id="search" placeholder="🔍 ค้นหาข้อความ" oninput="render()">
-  <textarea id="input" placeholder="พิมพ์ข้อความ เช่น\n🪐16/12\n👾12:00 BG แมทธิว"></textarea>
-  <button onclick="addMessage()">➕ บันทึกข้อความ</button>
+  <div class="summary" id="summary"></div>
 
-  <div class="messages" id="messages"></div>
+  <div class="card">
+    <input id="search" placeholder="🔍 ค้นหาข้อความ" oninput="render()">
+    <textarea id="input" placeholder="พิมพ์ข้อความ เช่น\n🪐16/12\n👾12:00 BG แมทธิว"></textarea>
+    <button onclick="addMessage()">➕ บันทึกข้อความ</button>
+  </div>
+
+  <div id="log"></div>
 </div>
 
 <script>
 let logs = JSON.parse(localStorage.getItem('bgLogs') || '[]');
+
+function nowTick() {
+  const d = new Date();
+  document.getElementById('now').innerText = `📅 ${d.toLocaleDateString('th-TH',{weekday:'long',year:'numeric',month:'short',day:'numeric'})}  ⏰ ${d.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'})}`;
+}
+setInterval(nowTick, 60000);
+nowTick();
 
 function addMessage() {
   const input = document.getElementById('input');
   const text = input.value.trim();
   if (!text) return;
 
-  logs.unshift({
-    text,
-    time: new Date().toISOString()
-  });
-
+  logs.unshift({ text, time: new Date().toISOString() });
   localStorage.setItem('bgLogs', JSON.stringify(logs));
   input.value = '';
   render();
 }
 
-function deleteMessage(index) {
+function deleteMessage(i) {
   if (!confirm('ลบข้อความนี้?')) return;
-  logs.splice(index, 1);
+  logs.splice(i, 1);
   localStorage.setItem('bgLogs', JSON.stringify(logs));
   render();
 }
 
-function getColor(text) {
+function color(text) {
   if (text.includes('แมทธิว')) return 'bg-matthew';
   if (text.includes('บอส')) return 'bg-boss';
   return 'bg-default';
@@ -155,20 +184,45 @@ function getColor(text) {
 
 function render() {
   const q = document.getElementById('search').value.toLowerCase();
-  const box = document.getElementById('messages');
+  const box = document.getElementById('log');
   box.innerHTML = '';
+
+  const today = new Date().toDateString();
+  let todayCount = 0;
+
+  const groups = {};
 
   logs.forEach((l, i) => {
     if (!l.text.toLowerCase().includes(q)) return;
+    const d = new Date(l.time);
+    const key = d.toDateString();
+    if (!groups[key]) groups[key] = [];
+    groups[key].push({ ...l, i });
+    if (key === today) todayCount++;
+  });
 
-    const div = document.createElement('div');
-    div.className = `bubble ${getColor(l.text)}`;
-    div.innerHTML = `
-      <button onclick="deleteMessage(${i})">🧹</button>
-      ${l.text.replace(/\n/g, '<br>')}
-      <small>⏰ ${new Date(l.time).toLocaleString('th-TH')}</small>
-    `;
-    box.appendChild(div);
+  document.getElementById('summary').innerText = `📊 ทั้งหมด ${logs.length} | 🟣 วันนี้ ${todayCount}`;
+
+  Object.keys(groups).sort((a,b)=>new Date(b)-new Date(a)).forEach(day => {
+    const sec = document.createElement('div');
+    sec.className = 'section';
+    sec.innerHTML = `<h3>${new Date(day).toLocaleDateString('th-TH',{weekday:'long',day:'numeric',month:'short'})}</h3>`;
+
+    const list = document.createElement('div');
+    list.className = 'messages';
+
+    groups[day].forEach(l => {
+      const div = document.createElement('div');
+      div.className = `bubble ${color(l.text)} ${day===today?'today':''}`;
+      div.innerHTML = `
+        <button onclick="deleteMessage(${l.i})">🧹</button>
+        ${l.text.replace(/\n/g,'<br>')}
+        <small>⏰ ${new Date(l.time).toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'})}</small>`;
+      list.appendChild(div);
+    });
+
+    sec.appendChild(list);
+    box.appendChild(sec);
   });
 }
 
