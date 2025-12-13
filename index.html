@@ -29,14 +29,15 @@
 
     body {
       margin: 0;
-      padding: 24px;
+      padding: 16px;
       font-family: 'Prompt', system-ui, sans-serif;
       background: radial-gradient(circle at top, #1b2150, var(--bg-main));
       color: var(--text-main);
+      min-height: 100vh;
     }
 
     .container {
-      max-width: 460px;
+      max-width: 100%;
       margin: 0 auto;
     }
 
@@ -108,7 +109,8 @@
     }
 
     #calendar {
-      min-height: 480px;
+      width: 100%;
+      min-height: 60vh;
     }
 
     /* FullCalendar theme tweak */
@@ -156,7 +158,7 @@
   </div>
 
 <script>
-  const API_URL = "https://script.google.com/macros/s/AKfycbxCmLDqj_AmsYypgcC1ep58lW9CiRxkETle-M17Cu9kn2Re_VM8pbSeujh3g-cMbEzmqA/exec";
+  const API_URL = "https://script.google.com/macros/s/AKfycbxCmLDqj_AmsYypgcC1ep58lW9CiRxkETle-M17Cu9kn2Re_VM8pbSeujh3g-cMbEzmqA/exec"
   let calendar;
 
   document.addEventListener('DOMContentLoaded', function () {
@@ -172,7 +174,8 @@
       },
       eventClick: function(info) {
         const ev = info.event;
-        if (!confirm('ยืนยันลบคิวนี้?\n' + ev.title)) return;
+        if (!confirm('ยืนยันลบคิวนี้?
+' + ev.title)) return;
 
         fetch(API_URL, {
           method: 'POST',
