@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <title>Track BG</title>
+  <link href="https://fonts.googleapis.com/css2?family=Prompt&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
+
+  <style>
+    body { font-family: Prompt; background:#0b0f1f; color:white; padding:16px }
+    #calendar { max-width:480px; margin:auto }
+  </style>
+</head>
+<body>
+
+<h2>🪐 Track BG</h2>
+<div id="calendar"></div>
+
+<script>
+const API_URL = "https://script.google.com/macros/s/AKfycbz9pguhBuCPhXd4zb10ZL2n3xm7zValNdNxlLJRqUMZb3QMhXC6F2sIGgImwOadlH7iSA/exec";
+
+document.addEventListener('DOMContentLoaded', () => {
+  const cal = new FullCalendar.Calendar(
+    document.getElementById('calendar'),
+    {
+      initialView: 'dayGridMonth',
+      events: fetchEvents,
+      eventClick(info) {
+        if (confirm('ลบคิวนี้?\\n' + info.event.title)) {
+          deleteEvent(info.event.id);
+        }
+      }
+    }
+  );
+  cal.render();
+
+  function fetchEvents(info, success) {
+    fetch(API_URL + '?action=getEvents')
+      .then(r => r.json())
+      .then(data => {
+        success(data.map(e => ({
+          id: e.id,
+          title: e.title,
+          start: e.start,
+          end: e.end
+        })));
+      });
+  }
+
+  function deleteEvent(id) {
+    fetch(API_URL, {
+      method: 'POST',
+      body: JSON.stringify({ action:'delete', id })
+    }).then(() => location.reload());
+  }
+});
+</script>
+
+</body>
+</html>
