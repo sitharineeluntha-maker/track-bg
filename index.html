@@ -1,216 +1,91 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Track BG</title>
 
-  <!-- Prompt Font -->
   <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
 
-  <!-- FullCalendar -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.css">
   <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
 
   <style>
-    :root {
-      --bg-main: #0b0f1f;
-      --bg-card: #151a33;
-      --accent: #8b5cf6;
-      --accent-soft: #a78bfa;
-      --text-main: #f8fafc;
-      --text-sub: #b6bdd6;
-      --border-soft: #2a2f55;
-    }
-
-    * {
-      box-sizing: border-box;
-    }
-
     body {
       margin: 0;
       padding: 16px;
-      font-family: 'Prompt', system-ui, sans-serif;
-      background: radial-gradient(circle at top, #1b2150, var(--bg-main));
-      color: var(--text-main);
-      min-height: 100vh;
-    }
-
-    .container {
-      max-width: 100%;
-      margin: 0 auto;
-    }
-
-    .card {
-      background: linear-gradient(180deg, #171c38, var(--bg-card));
-      border-radius: 22px;
-      padding: 20px;
-      margin-bottom: 22px;
-      box-shadow: 0 20px 40px rgba(0,0,0,.45);
-    }
-
-    h1 {
-      font-size: 22px;
-      margin: 0 0 4px;
-      font-weight: 600;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .subtitle {
-      font-size: 13px;
-      color: var(--text-sub);
-      margin-bottom: 14px;
-    }
-
-    textarea {
-      width: 100%;
-      min-height: 90px;
-      background: #0b0f1f;
-      border: 1px solid var(--border-soft);
-      border-radius: 16px;
-      padding: 12px;
-      color: var(--text-main);
       font-family: 'Prompt', sans-serif;
-      font-size: 14px;
-      line-height: 1.4;
-      resize: vertical;
+      background: linear-gradient(180deg, #0b0f1f, #14182f);
+      color: #fff;
     }
 
-    textarea::placeholder {
-      color: #6e75a8;
-    }
-
-    button {
-      width: 100%;
-      margin-top: 16px;
-      padding: 14px;
-      border-radius: 16px;
-      border: none;
-      background: linear-gradient(135deg, var(--accent), var(--accent-soft));
-      color: white;
-      font-size: 15px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: transform .15s ease, box-shadow .15s ease;
-    }
-
-    button:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 10px 20px rgba(139,92,246,.4);
-    }
-
-    .hint {
+    h2 {
       text-align: center;
-      font-size: 12px;
-      color: var(--text-sub);
-      margin-top: 10px;
+      margin-bottom: 12px;
+      font-weight: 600;
     }
 
     #calendar {
       width: 100%;
-      min-height: 60vh;
+      max-width: 480px;
+      min-height: 70vh;
+      margin: auto;
+      background: #0e1330;
+      border-radius: 16px;
+      padding: 8px;
     }
 
-    /* FullCalendar theme tweak */
     .fc {
-      color: var(--text-main);
       font-family: 'Prompt', sans-serif;
     }
 
-    .fc-toolbar-title {
-      font-size: 16px;
-      font-weight: 500;
-    }
-
-    .fc-daygrid-day-number {
-      color: var(--text-sub);
-    }
-
     .fc-event {
-      background: linear-gradient(135deg, var(--accent), var(--accent-soft));
+      border-radius: 10px;
+      font-size: 0.85em;
       border: none;
-      border-radius: 8px;
-      padding: 2px 4px;
-      font-size: 12px;
+    }
+
+    .fc-daygrid-day.fc-day-today {
+      background: rgba(180,120,255,0.25);
     }
   </style>
 </head>
 <body>
 
-  <div class="container">
-
-    <div class="card">
-      <h1>🪐 Track BG</h1>
-      <div class="subtitle">monsterbrother · Google Calendar</div>
-
-      <textarea id="raw" placeholder="🪐16/12&#10;👾12:00 BG แมทธิว"></textarea>
-
-      <button onclick="add()">➕ เพิ่มลงปฏิทิน</button>
-      <div class="hint">แตะที่คิวในปฏิทินเพื่อลบ</div>
-    </div>
-
-    <div class="card">
-      <div id="calendar" style="width:100%;min-height:65vh"></div>
-    </div>
-
-  </div>
+<h2>🪐 Track BG</h2>
+<div id="calendar"></div>
 
 <script>
-  const API_URL = "https://script.google.com/macros/s/AKfycbxCmLDqj_AmsYypgcC1ep58lW9CiRxkETle-M17Cu9kn2Re_VM8pbSeujh3g-cMbEzmqA/exec"
-  let calendar;
+const API_URL = "https://script.google.com/macros/s/AKfycbxCmLDqj_AmsYypgcC1ep58lW9CiRxkETle-M17Cu9kn2Re_VM8pbSeujh3g-cMbEzmqA/exec";
 
-  document.addEventListener('DOMContentLoaded', function () {
-    const el = document.getElementById('calendar');
+window.addEventListener('DOMContentLoaded', () => {
+  const el = document.getElementById('calendar');
+  if (!el) {
+    console.error('ไม่พบ calendar');
+    return;
+  }
 
-    if (!el) { console.error('ไม่เจอ div calendar'); return; }
-
-    calendar = new FullCalendar.Calendar(el, {
-      initialView: 'dayGridMonth',
-      height: 480,
-      events: function (info, successCallback) {
-        fetch(API_URL + '?action=getEvents')
-          .then(r => r.json())
-          .then(data => {
-            const events = data.map(e => ({
-              id: e.id,
-              title: e.title,
-              start: e.start,
-              end: e.end
-            }));
-            successCallback(events);
-          })
-          .catch(err => console.error(err));
-      },
-      eventClick: function(info) {
-        const ev = info.event;
-        if (!confirm('ยืนยันลบคิวนี้?
-' + ev.title)) return;
-
-        fetch(API_URL, {
-          method: 'POST',
-          body: JSON.stringify({ action: 'delete', id: ev.id })
-        }).then(() => calendar.refetchEvents());
-      }
-    });
-
-    calendar.render();
+  const calendar = new FullCalendar.Calendar(el, {
+    initialView: 'dayGridMonth',
+    height: 'auto',
+    events: function(info, successCallback) {
+      fetch(API_URL + '?action=getEvents')
+        .then(res => res.json())
+        .then(data => {
+          const events = data.map(e => ({
+            id: e.id,
+            title: e.title,
+            start: e.start,
+            end: e.end
+          }));
+          successCallback(events);
+        })
+        .catch(err => console.error(err));
+    }
   });
 
-  function add() {
-    const raw = document.getElementById('raw').value;
-
-    fetch(API_URL, {
-      method: 'POST',
-      body: JSON.stringify({ action: 'addRaw', raw })
-    })
-      .then(r => r.json())
-      .then(() => {
-        calendar.refetchEvents();
-        document.getElementById('raw').value = '';
-      });
-  }
+  calendar.render();
+});
 </script>
 
 </body>
