@@ -141,7 +141,9 @@
 
   <div class="card">
     <input id="search" placeholder="🔍 ค้นหาข้อความ" oninput="render()">
-    <textarea id="input" placeholder="พิมพ์ข้อความ เช่น\n🪐16/12\n👾12:00 BG แมทธิว"></textarea>
+    <textarea id="input" placeholder="พิมพ์ข้อความ เช่น
+🪐16/12
+👾12:00 BG แมทธิว"></textarea>
     <button onclick="addMessage()">➕ บันทึกข้อความ</button>
   </div>
 
@@ -149,6 +151,9 @@
 </div>
 
 <script>
+// ====== CONFIG ======
+const SYNC_API = "https://script.google.com/macros/s/YOUR_SYNC_API/exec"; // ใส่ของคุณ
+
 let logs = JSON.parse(localStorage.getItem('bgLogs') || '[]');
 
 function nowTick() {
@@ -216,7 +221,8 @@ function render() {
       div.className = `bubble ${color(l.text)} ${day===today?'today':''}`;
       div.innerHTML = `
         <button onclick="deleteMessage(${l.i})">🧹</button>
-        ${l.text.replace(/\n/g,'<br>')}
+        ${l.text.replace(/
+/g,'<br>')}
         <small>⏰ ${new Date(l.time).toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'})}</small>`;
       list.appendChild(div);
     });
