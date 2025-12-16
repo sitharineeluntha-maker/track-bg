@@ -152,7 +152,7 @@
 
 <script>
 // ====== CONFIG ======
-const SYNC_API = "https://script.google.com/macros/s/AKfycbxCmLDqj_AmsYypgcC1ep58lW9CiRxkETle-M17Cu9kn2Re_VM8pbSeujh3g-cMbEzmqA/exec"; // ใส่ของคุณ
+const SYNC_API = "https://script.google.com/macros/s/AKfycbzdENB_dwd5NVvLKS090yczMHFTQghZMkIin07anrhusm0aUD_fk_v6rdCPZieVS2XBIg/exec"; // ใส่ของคุณ
 
 let logs = JSON.parse(localStorage.getItem('bgLogs') || '[]');
 
@@ -171,7 +171,8 @@ function addMessage() {
   fetch(SYNC_API, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ action: 'add', tloadMessages();})
+    body: JSON.stringify({ action: 'add', text })
+  })
   .then(() => {
     input.value = '';
     loadMessages();
@@ -185,7 +186,7 @@ function loadMessages() {
     .then(data => {
       logs = data;
       localStorage.setItem('bgLogs', JSON.stringify(logs));
-      render();
+      loadMessages();
     });
 }
 
@@ -252,3 +253,4 @@ render();
 
 </body>
 </html>
+
