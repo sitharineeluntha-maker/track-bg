@@ -152,7 +152,7 @@
 
 <script>
 // ====== CONFIG ======
-const SYNC_API = "https://script.google.com/macros/s/YOUR_SYNC_API/exec"; // ใส่ของคุณ
+const SYNC_API = "https://script.google.com/macros/s/AKfycbxCmLDqj_AmsYypgcC1ep58lW9CiRxkETle-M17Cu9kn2Re_VM8pbSeujh3g-cMbEzmqA/exec"; // ใส่ของคุณ
 
 let logs = JSON.parse(localStorage.getItem('bgLogs') || '[]');
 
@@ -168,10 +168,25 @@ function addMessage() {
   const text = input.value.trim();
   if (!text) return;
 
-  logs.unshift({ text, time: new Date().toISOString() });
-  localStorage.setItem('bgLogs', JSON.stringify(logs));
-  input.value = '';
-  render();
+  fetch(SYNC_API, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'add', tloadMessages();})
+  .then(() => {
+    input.value = '';
+    loadMessages();
+  })
+  .catch(() => alert('❌ บันทึกไม่สำเร็จ'));
+}
+
+function loadMessages() {
+  fetch(SYNC_API + '?action=list')
+    .then(r => r.json())
+    .then(data => {
+      logs = data;
+      localStorage.setItem('bgLogs', JSON.stringify(logs));
+      render();
+    });
 }
 
 function deleteMessage(i) {
